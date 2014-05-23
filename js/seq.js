@@ -5,13 +5,18 @@ This comments out the beeps, and sequences MIDI note output to light the leds on
 */
                             
 //what leds are we sequencing?
-var lednn = {}
+var lednn = {};
 lednn.Base = leds.Base.pad;
 lednn.Alias8 = leds.Alias8.btn;
 lednn.CNTRLR = leds.CNTRLR.rowbtn;
 lednn.OhmRGB = leds.OhmRGB.grid;
 lednn.Ohm64 = leds.Ohm64.grid;
 
+var sysex = {};
+sysex.head = [240,0,1,97];
+sysex.eom = 247;
+sysex.Base = [];
+sysex.Base[4] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 var stepseq = [];
 stepseq[0] = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
 var SEQCOUNT = 16;
@@ -129,9 +134,11 @@ function play() {
         current16thNote = 0;
         nextNoteTime = seqContext.currentTime;
         scheduler();    // kick off scheduling
+        light(18,'green');
         return "stop";
     } else {
         window.clearTimeout( timerID );
+        light(18,'blue');
         return "play";
     }
 }
@@ -140,6 +147,10 @@ function calcstep(note){
   if(product=='Base'){
       var BASECOL = 8;
       var BASEROW = 4;
+      clog('calcstep '+ note);
+      if(note===18){
+        play();
+      }
       if(note>35 && note< 68){ //pads
         var notep = note - 36;
         var col = notep%BASECOL;
@@ -148,7 +159,7 @@ function calcstep(note){
           //----select a sound
           //left half of pads 0,1,2,3, 8,9,10,11, 16,17,18,19, 24,25,26,27
           select_index = row*BASEROW+(col);
-          clog('select '+select_index);
+          //clog('select '+select_index);
           //light(leds.Base.pad_R[select_index],'red');
         }else{
           //----edit steps
@@ -159,7 +170,7 @@ function calcstep(note){
           var state = stepseq[select_index][step_index];
           var scolor = (state>0) ? 'w' : 'off'; //if state is greater than 0, make it white, otherwise, off.
           light(note,scolor); //light the step you just toggled immediately. 
-          clog('step# '+step_index+ ' state '+stepseq[select_index][step_index]+ ' seq '+stepseq[select_index]);
+          //clog('step# '+step_index+ ' state '+stepseq[select_index][step_index]+ ' seq '+stepseq[select_index]);
         }
       }
     }
@@ -194,7 +205,7 @@ function calcstep(note){
 }
 
 function onSelectSeq(){
-  clog('update select'+select_index);
+  //clog('update select'+select_index);
   //light the selection and revert previous selection:
   light(leds.Base.pad_L[select_index],'green');
   light(leds.Base.pad_L[prev_select_index],'blue');
@@ -273,9 +284,15 @@ function draw() {
     requestAnimFrame(draw);
 }
 function initLEDs(){
+  //turn off all lights
+  for(var i in sysex.Base[4].length){
+    sysex.Base[4][i]=0;
+  }
+  //sxout( [4,sysex.Base[4]] );
   for(i in leds.Base.pad_L){
     light(leds.Base.pad_L[i],'blue');
   }
+  light(18,'blue');
   onSelectSeq();
 }
 

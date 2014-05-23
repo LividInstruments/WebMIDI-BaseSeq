@@ -10,9 +10,9 @@ var select_index = 0;
 var step_index = 0;
 
 function noteOn( note, velocity ) {
-    clog(' note on '+note+' '+velocity);
     $('notenum').value = note;
     $('noteval').value = velocity;
+    clog(' note on '+note+' '+velocity);
     calcstep(note);
 }
 
